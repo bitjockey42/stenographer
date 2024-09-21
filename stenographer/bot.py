@@ -1,7 +1,7 @@
 import os
 import csv
 
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 
 import discord
 
@@ -36,6 +36,8 @@ bot = commands.Bot(command_prefix="?", description=description, intents=intents)
 
 @bot.event
 async def on_ready():
+    url = f"https://discordapp.com/oauth2/authorize?client_id={DISCORD_BOT_ID}&scope=bot"
+    print(f"Visit this link to invite the bot to your server: {url}")
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
 
