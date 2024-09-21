@@ -51,7 +51,7 @@ async def export(ctx):
     print(channels)
 
     for channel in channels:
-        filename = f"{channel.id}__{channel.name}.csv"
+        filename = f"{channel.name}__[{channel.id}].csv"
         await write_message_history(
             channel.id, export_channel_id=EXPORT_CHANNEL_ID, filename=filename
         )
@@ -101,7 +101,7 @@ async def write_message_history(channel_or_thread_id, export_channel_id, filenam
                 writer.writerow(row)
 
                 if bool(message.thread):
-                    thread_filename = f"{message.thread.id}__{message.thread.name}.csv"
+                    thread_filename = f"{channel_or_thread.name}|{message.thread.name}__[{channel_or_thread.id}|{message.thread.id}].csv"
                     await write_message_history(
                         message.thread.id,
                         export_channel_id=export_channel_id,
