@@ -46,7 +46,7 @@ async def on_ready():
 async def export(ctx):
     await ctx.channel.send(f"Hello {ctx.author.display_name}")
 
-    with open(f"{ctx.channel.id}.csv", "w+", newline="") as csvfile:
+    with open(f"{ctx.channel.id}__{ctx.channel.name}.csv", "w+", newline="") as csvfile:
         writer = csv.DictWriter(
             csvfile,
             fieldnames=FIELDNAMES,
@@ -91,7 +91,7 @@ async def write_message_history(channel_or_thread_id, writer):
             writer.writerow(row)
 
             if bool(message.thread):
-                with open(f"{message.thread.id}.csv", "w+", newline="") as csvfile:
+                with open(f"{message.thread.id}__{message.thread.name}.csv", "w+", newline="") as csvfile:
                     thread_writer = csv.DictWriter(
                         csvfile,
                         fieldnames=FIELDNAMES,
