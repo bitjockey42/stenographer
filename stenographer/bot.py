@@ -12,21 +12,22 @@ load_dotenv()
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 DISCORD_BOT_ID = int(os.getenv("DISCORD_BOT_ID"))
-EXPORT_CHANNEL_ID = int(os.getenv("DISCORD_EXPORT_CHANNEL_ID"))
 FIELDNAMES = [
+    "id",
     "created_at",
+    "edited_at",
     "clean_content",
     "author",
     "author_id",
     "thread_id",
     "thread",
+    "channel_id",
+    "channel",
+    "mentions",
 ]
 
 
-description = """An example bot to showcase the discord.ext.commands extension
-module.
-
-There are a number of utility commands being showcased here."""
+description = """A discord bot that creates a CSV"""
 
 intents = discord.Intents.default()
 intents.members = True
@@ -53,7 +54,7 @@ async def export(ctx):
     for channel in channels:
         filename = f"{channel.name}__[{channel.id}].csv"
         await write_message_history(
-            channel.id, export_channel_id=EXPORT_CHANNEL_ID, filename=filename
+            channel.id, export_channel_id=ctx.channel.id, filename=filename
         )
 
 
@@ -90,12 +91,17 @@ async def write_message_history(channel_or_thread_id, export_channel_id, filenam
                     continue
 
                 row = {
+                    "id": message.id,
                     "created_at": message.created_at,
+                    "edited_at": message.edited_at,
                     "clean_content": message.clean_content,
                     "author": message.author.display_name,
                     "author_id": message.author.id,
                     "thread": message.thread.name if bool(message.thread) else None,
                     "thread_id": message.thread.id if bool(message.thread) else None,
+                    "channel": message.channel,
+                    "channel_id": message.channel.id,
+                    "mentions": [message.mentions],
                 }
 
                 writer.writerow(row)
