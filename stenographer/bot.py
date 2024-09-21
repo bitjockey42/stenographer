@@ -61,6 +61,10 @@ async def export(ctx):
 
 async def write_message_history(channel_or_thread_id, export_channel_id, filename):
     channel_or_thread = bot.get_channel(channel_or_thread_id)
+
+    if not channel_or_thread:
+        return
+
     export_channel = bot.get_channel(export_channel_id)
 
     with open(filename, "w+", newline="") as csvfile:
