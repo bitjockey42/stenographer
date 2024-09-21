@@ -32,9 +32,14 @@ async def on_ready():
 @bot.command()
 async def export(ctx):
     await ctx.channel.send(f"Hello {ctx.author.display_name}")
+
     channel = bot.get_channel(ctx.channel.id)
+
+    oldest_message = None
     async for message in channel.history(limit=1, oldest_first=True):
-        print(message.clean_content)
+        oldest_message = message
+
+    print(oldest_message.created_at)
 
 
 bot.run(DISCORD_BOT_TOKEN)
