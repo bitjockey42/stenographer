@@ -9,6 +9,10 @@ readme = "README.md"
 python = "^3.10"
 discord-py = "^2.4.0"
 python-dotenv = "^1.0.1"
+click = "^8.1.7"
+
+[tool.poetry.scripts]
+stenographer = "stenographer.cli:cli"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -127,4 +127,5 @@ async def write_message_history(channel_or_thread_id, export_channel_id, filenam
         os.remove(os.path.join(filename))
 
 
-bot.run(DISCORD_BOT_TOKEN)
+def start_bot():
+    bot.run(DISCORD_BOT_TOKEN)
