@@ -48,7 +48,7 @@ async def export(ctx):
     print(from_date, to_date)
 
     with open("test.csv", "w+", newline="") as csvfile:
-        fieldnames = ["created_at", "clean_content", "author"]
+        fieldnames = ["created_at", "clean_content", "author", "author_id", "thread_id", "thread"]
         writer = csv.DictWriter(
             csvfile,
             fieldnames=fieldnames,
@@ -64,7 +64,10 @@ async def export(ctx):
                 writer.writerow({
                     "created_at": message.created_at,
                     "clean_content": message.clean_content,
-                    "author": message.author.display_name
+                    "author": message.author.display_name,
+                    "author_id": message.author.id,
+                    "thread_id": message.thread.id if bool(message.thread) else None,
+                    "thread": message.thread.name if bool(message.thread) else None
                 })
 
                 from_date = message.created_at
