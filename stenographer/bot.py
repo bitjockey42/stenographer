@@ -1,7 +1,7 @@
 import os
 import csv
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import discord
 
@@ -11,6 +11,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+FIELDNAMES = [
+    "created_at",
+    "clean_content",
+    "author",
+    "author_id",
+    "thread_id",
+    "thread",
+]
 
 
 description = """An example bot to showcase the discord.ext.commands extension
@@ -39,19 +47,18 @@ async def export(ctx):
 
     from_date = None
     async for message in channel.history(limit=1, oldest_first=True):
-        from_date = message.created_at
+        from_date = message.created_at - timedelta(days=1)
 
     to_date = None
     async for message in channel.history(limit=1):
         to_date = message.created_at
-    
+
     print(from_date, to_date)
 
     with open("test.csv", "w+", newline="") as csvfile:
-        fieldnames = ["created_at", "clean_content", "author", "author_id", "thread_id", "thread"]
         writer = csv.DictWriter(
             csvfile,
-            fieldnames=fieldnames,
+            fieldnames=FIELDNAMES,
             quoting=csv.QUOTE_ALL,
             lineterminator=os.linesep,
         )
@@ -61,20 +68,26 @@ async def export(ctx):
             async for message in channel.history(
                 after=from_date, limit=100, oldest_first=True
             ):
-                writer.writerow({
+                # if bool(message.thread):
+                #     thread = bot.get_channel(message.thread.id)
+                #     from_thread_date
+
+                row = {
                     "created_at": message.created_at,
                     "clean_content": message.clean_content,
                     "author": message.author.display_name,
                     "author_id": message.author.id,
-                    "thread_id": message.thread.id if bool(message.thread) else None,
-                    "thread": message.thread.name if bool(message.thread) else None
-                })
+                    "thread": None,
+                    "thread_id": None,
+                }
+
+                writer.writerow(row)
 
                 from_date = message.created_at
 
             if from_date == to_date:
                 break
-    
+
     # await ctx.channel.send("Exported")
 
 
