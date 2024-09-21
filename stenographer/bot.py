@@ -47,10 +47,14 @@ async def on_ready():
 
 @bot.command()
 async def export(ctx):
-    filename = f"{ctx.channel.id}__{ctx.channel.name}.csv"
-    await write_message_history(
-        ctx.channel.id, export_channel_id=EXPORT_CHANNEL_ID, filename=filename
-    )
+    channels = ctx.message.channel_mentions
+    print(channels)
+
+    for channel in channels:
+        filename = f"{channel.id}__{channel.name}.csv"
+        await write_message_history(
+            channel.id, export_channel_id=EXPORT_CHANNEL_ID, filename=filename
+        )
 
 
 async def write_message_history(channel_or_thread_id, export_channel_id, filename):
