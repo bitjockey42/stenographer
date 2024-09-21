@@ -41,7 +41,11 @@ async def export(ctx):
     async for message in channel.history(limit=1, oldest_first=True):
         from_date = message.created_at
 
-    to_date = datetime.now(tz=timezone.utc)
+    to_date = None
+    async for message in channel.history(limit=1):
+        to_date = message.created_at
+    
+    print(from_date, to_date)
 
     with open("test.csv", "w+", newline="") as csvfile:
         fieldnames = ["created_at", "clean_content", "author"]
@@ -57,7 +61,6 @@ async def export(ctx):
             async for message in channel.history(
                 after=from_date, limit=100, oldest_first=True
             ):
-                print(f"{message.author.display_name}: {message.clean_content}")
                 writer.writerow({
                     "created_at": message.created_at,
                     "clean_content": message.clean_content,
@@ -68,6 +71,8 @@ async def export(ctx):
 
             if from_date == to_date:
                 break
+    
+    # await ctx.channel.send("Exported")
 
 
 bot.run(DISCORD_BOT_TOKEN)
