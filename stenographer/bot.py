@@ -12,6 +12,7 @@ load_dotenv()
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 DISCORD_BOT_ID = int(os.getenv("DISCORD_BOT_ID"))
+EXPORT_CHANNEL_ID = int(os.getenv("DISCORD_EXPORT_CHANNEL_ID"))
 FIELDNAMES = [
     "created_at",
     "clean_content",
@@ -48,7 +49,7 @@ async def on_ready():
 async def export(ctx):
     filename = f"{ctx.channel.id}__{ctx.channel.name}.csv"
     await write_message_history(
-        ctx.channel.id, export_channel_id=ctx.channel.id, filename=filename
+        ctx.channel.id, export_channel_id=EXPORT_CHANNEL_ID, filename=filename
     )
 
 
@@ -111,6 +112,9 @@ async def write_message_history(channel_or_thread_id, export_channel_id, filenam
     await export_channel.send(
         f"Exported #{channel_or_thread.name}", file=discord.File(os.path.join(filename))
     )
+
+    if os.path.exists(os.path.join(filename)):
+        os.remove(os.path.join(filename))
 
 
 bot.run(DISCORD_BOT_TOKEN)
