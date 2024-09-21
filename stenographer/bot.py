@@ -36,7 +36,9 @@ bot = commands.Bot(command_prefix="?", description=description, intents=intents)
 
 @bot.event
 async def on_ready():
-    url = f"https://discordapp.com/oauth2/authorize?client_id={DISCORD_BOT_ID}&scope=bot"
+    url = (
+        f"https://discordapp.com/oauth2/authorize?client_id={DISCORD_BOT_ID}&scope=bot"
+    )
     print(f"Visit this link to invite the bot to your server: {url}")
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
@@ -44,9 +46,17 @@ async def on_ready():
 
 @bot.command()
 async def export(ctx):
-    await ctx.channel.send(f"Hello {ctx.author.display_name}")
+    filename = f"{ctx.channel.id}__{ctx.channel.name}.csv"
+    await write_message_history(
+        ctx.channel.id, export_channel_id=ctx.channel.id, filename=filename
+    )
 
-    with open(f"{ctx.channel.id}__{ctx.channel.name}.csv", "w+", newline="") as csvfile:
+
+async def write_message_history(channel_or_thread_id, export_channel_id, filename):
+    channel_or_thread = bot.get_channel(channel_or_thread_id)
+    export_channel = bot.get_channel(export_channel_id)
+
+    with open(filename, "w+", newline="") as csvfile:
         writer = csv.DictWriter(
             csvfile,
             fieldnames=FIELDNAMES,
@@ -55,56 +65,52 @@ async def export(ctx):
         )
         writer.writeheader()
 
-        await write_message_history(ctx.channel.id, writer=writer)
+        from_date = None
+        async for message in channel_or_thread.history(limit=1, oldest_first=True):
+            from_date = message.created_at - timedelta(days=1)
 
+        to_date = None
+        async for message in channel_or_thread.history(limit=1):
+            to_date = message.created_at
 
-async def write_message_history(channel_or_thread_id, writer):
-    channel_or_thread = bot.get_channel(channel_or_thread_id)
-    from_date = None
-    async for message in channel_or_thread.history(limit=1, oldest_first=True):
-        from_date = message.created_at - timedelta(days=1)
-
-    to_date = None
-    async for message in channel_or_thread.history(limit=1):
-        to_date = message.created_at
-
-    while from_date <= to_date:
-        async for message in channel_or_thread.history(
-            after=from_date, limit=100, oldest_first=True
-        ):
-            if (
-                message.clean_content.startswith("?export")
-                or message.author.id == DISCORD_BOT_ID
+        while from_date <= to_date:
+            async for message in channel_or_thread.history(
+                after=from_date, limit=100, oldest_first=True
             ):
-                from_date = message.created_at
-                continue
+                if (
+                    message.clean_content.startswith("?export")
+                    or message.author.id == DISCORD_BOT_ID
+                ):
+                    from_date = message.created_at
+                    continue
 
-            row = {
-                "created_at": message.created_at,
-                "clean_content": message.clean_content,
-                "author": message.author.display_name,
-                "author_id": message.author.id,
-                "thread": message.thread.name if bool(message.thread) else None,
-                "thread_id": message.thread.id if bool(message.thread) else None,
-            }
+                row = {
+                    "created_at": message.created_at,
+                    "clean_content": message.clean_content,
+                    "author": message.author.display_name,
+                    "author_id": message.author.id,
+                    "thread": message.thread.name if bool(message.thread) else None,
+                    "thread_id": message.thread.id if bool(message.thread) else None,
+                }
 
-            writer.writerow(row)
+                writer.writerow(row)
 
-            if bool(message.thread):
-                with open(f"{message.thread.id}__{message.thread.name}.csv", "w+", newline="") as csvfile:
-                    thread_writer = csv.DictWriter(
-                        csvfile,
-                        fieldnames=FIELDNAMES,
-                        quoting=csv.QUOTE_ALL,
-                        lineterminator=os.linesep,
+                if bool(message.thread):
+                    thread_filename = f"{message.thread.id}__{message.thread.name}.csv"
+                    await write_message_history(
+                        message.thread.id,
+                        export_channel_id=export_channel_id,
+                        filename=thread_filename,
                     )
-                    thread_writer.writeheader()
-                    await write_message_history(message.thread.id, writer=thread_writer)
 
-            from_date = message.created_at
+                from_date = message.created_at
 
-        if from_date == to_date:
-            break
+            if from_date == to_date:
+                break
+
+    await export_channel.send(
+        f"Exported #{channel_or_thread.name}", file=discord.File(os.path.join(filename))
+    )
 
 
 bot.run(DISCORD_BOT_TOKEN)
