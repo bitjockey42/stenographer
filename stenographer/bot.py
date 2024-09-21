@@ -1,5 +1,7 @@
 import os
-import random
+import csv
+
+from datetime import datetime, timezone
 
 import discord
 
@@ -35,11 +37,37 @@ async def export(ctx):
 
     channel = bot.get_channel(ctx.channel.id)
 
-    oldest_message = None
+    from_date = None
     async for message in channel.history(limit=1, oldest_first=True):
-        oldest_message = message
+        from_date = message.created_at
 
-    print(oldest_message.created_at)
+    to_date = datetime.now(tz=timezone.utc)
+
+    with open("test.csv", "w+", newline="") as csvfile:
+        fieldnames = ["created_at", "clean_content", "author"]
+        writer = csv.DictWriter(
+            csvfile,
+            fieldnames=fieldnames,
+            quoting=csv.QUOTE_ALL,
+            lineterminator=os.linesep,
+        )
+        writer.writeheader()
+
+        while from_date <= to_date:
+            async for message in channel.history(
+                after=from_date, limit=100, oldest_first=True
+            ):
+                print(f"{message.author.display_name}: {message.clean_content}")
+                writer.writerow({
+                    "created_at": message.created_at,
+                    "clean_content": message.clean_content,
+                    "author": message.author.display_name
+                })
+
+                from_date = message.created_at
+
+            if from_date == to_date:
+                break
 
 
 bot.run(DISCORD_BOT_TOKEN)
