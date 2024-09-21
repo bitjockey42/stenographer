@@ -44,7 +44,7 @@ async def on_ready():
 async def export(ctx):
     await ctx.channel.send(f"Hello {ctx.author.display_name}")
 
-    with open("test.csv", "w+", newline="") as csvfile:
+    with open(f"{ctx.channel.id}.csv", "w+", newline="") as csvfile:
         writer = csv.DictWriter(
             csvfile,
             fieldnames=FIELDNAMES,
@@ -53,21 +53,21 @@ async def export(ctx):
         )
         writer.writeheader()
 
-        await write_message_history(ctx.channel.id, writer)
+        await write_message_history(ctx.channel.id, writer=writer)
 
 
 async def write_message_history(channel_or_thread_id, writer):
-    channel = bot.get_channel(channel_or_thread_id)
+    channel_or_thread = bot.get_channel(channel_or_thread_id)
     from_date = None
-    async for message in channel.history(limit=1, oldest_first=True):
+    async for message in channel_or_thread.history(limit=1, oldest_first=True):
         from_date = message.created_at - timedelta(days=1)
 
     to_date = None
-    async for message in channel.history(limit=1):
+    async for message in channel_or_thread.history(limit=1):
         to_date = message.created_at
 
     while from_date <= to_date:
-        async for message in channel.history(
+        async for message in channel_or_thread.history(
             after=from_date, limit=100, oldest_first=True
         ):
             if (
@@ -87,6 +87,17 @@ async def write_message_history(channel_or_thread_id, writer):
             }
 
             writer.writerow(row)
+
+            if bool(message.thread):
+                with open(f"{message.thread.id}.csv", "w+", newline="") as csvfile:
+                    thread_writer = csv.DictWriter(
+                        csvfile,
+                        fieldnames=FIELDNAMES,
+                        quoting=csv.QUOTE_ALL,
+                        lineterminator=os.linesep,
+                    )
+                    thread_writer.writeheader()
+                    await write_message_history(message.thread.id, writer=thread_writer)
 
             from_date = message.created_at
 
