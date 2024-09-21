@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+DISCORD_BOT_ID = int(os.getenv("DISCORD_BOT_ID"))
 FIELDNAMES = [
     "created_at",
     "clean_content",
@@ -69,13 +70,20 @@ async def write_message_history(channel_or_thread_id, writer):
         async for message in channel.history(
             after=from_date, limit=100, oldest_first=True
         ):
+            if (
+                message.clean_content.startswith("?export")
+                or message.author.id == DISCORD_BOT_ID
+            ):
+                from_date = message.created_at
+                continue
+
             row = {
                 "created_at": message.created_at,
                 "clean_content": message.clean_content,
                 "author": message.author.display_name,
                 "author_id": message.author.id,
-                "thread": None,
-                "thread_id": None,
+                "thread": message.thread.name if bool(message.thread) else None,
+                "thread_id": message.thread.id if bool(message.thread) else None,
             }
 
             writer.writerow(row)
